@@ -1,0 +1,3 @@
+include requirements.txt
+include ${python_package}/*.proto
+include ${python_package}/_version.py
