@@ -66,11 +66,6 @@ python installed, if they don't need python bindings.
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>2.7.2</version>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>2.3.2</version>
         <configuration>
@@ -104,20 +99,8 @@ python installed, if they don't need python bindings.
         </executions>
       </plugin>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-source-plugin</artifactId>
-        <version>2.1.2</version>
-        <executions>
-          <execution>
-            <id>attach-sources</id>
-            <phase>package</phase>
-            <goals>
-              <goal>jar-no-fork</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
+        <!-- Make sure destination directories for protoc output
+        exist. -->
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-antrun-plugin</artifactId>
         <version>1.7</version>
@@ -129,7 +112,8 @@ python installed, if they don't need python bindings.
             </goals>
             <configuration>
               <tasks>
-                <mkdir dir="${basedir}/src/main/python/${python_package}"/>
+                <mkdir dir="${project.build.directory}/python/${python_package}"/>
+                <mkdir dir="${basedir}/src/main/java"/>
               </tasks>
             </configuration>
           </execution>
@@ -152,7 +136,7 @@ python installed, if they don't need python bindings.
               <arguments>
                 <argument>--proto_path=${basedir}/src/main/resources</argument>
                 <argument>--java_out=${basedir}/src/main/java</argument>
-                <argument>--python_out=${basedir}/src/main/python/${python_package}</argument>
+                <argument>--python_out=${project.build.directory}/python/${python_package}</argument>
                 <argument>${basedir}/src/main/resources/*.proto</argument>
               </arguments>
             </configuration>
@@ -165,7 +149,7 @@ python installed, if they don't need python bindings.
             </goals>
             <configuration>
               <executable>python</executable>
-              <workingDirectory>${basedir}/src/main/python</workingDirectory>
+              <workingDirectory>${project.build.directory}/python</workingDirectory>
               <arguments>
                 <argument>setup.py</argument>
                 <argument>sdist</argument>
@@ -180,20 +164,10 @@ python installed, if they don't need python bindings.
         <configuration>
           <filesets>
             <fileset>
-              <directory>${basedir}/src/main/python</directory>
-              <includes>
-                <include>**/*</include>
-                <include>*</include>
-              </includes>
-              <excludes>
-                <exclude>requirements.txt</exclude>
-              </excludes>
-              <followSymlinks>false</followSymlinks>
-            </fileset>
-            <fileset>
+              <!-- Remove protoc-generated Java source only .-->
               <directory>${basedir}/src/main/java</directory>
               <includes>
-                <include>*</include>
+                <include>Sample.java</include>
               </includes>
               <followSymlinks>false</followSymlinks>
             </fileset>
@@ -207,8 +181,9 @@ python installed, if they don't need python bindings.
         <includes>
           <include>setup.py</include>
           <include>MANIFEST.in</include>
+          <include>requirements.txt</include>
         </includes>
-        <targetPath>${basedir}/src/main/python</targetPath>
+        <targetPath>${project.build.directory}/python</targetPath>
         <filtering>true</filtering>
       </resource>
       <resource>
@@ -216,14 +191,14 @@ python installed, if they don't need python bindings.
         <includes>
           <include>__init__.py</include>
         </includes>
-        <targetPath>${basedir}/src/main/python/${python_package}</targetPath>
+        <targetPath>${project.build.directory}/python/${python_package}</targetPath>
         <filtering>true</filtering>
       </resource>
       <resource>
         <!-- Ship a copy of PB definition with the python package.-->
         <directory>src/main/resources</directory>
         <includes><include>*.proto</include></includes>
-        <targetPath>${basedir}/src/main/python/${python_package}</targetPath>
+        <targetPath>${project.build.directory}/python/${python_package}</targetPath>
         <filtering>false</filtering>
       </resource>
     </resources>
