@@ -118,6 +118,24 @@ python installed, if they don't need python bindings.
         </executions>
       </plugin>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.7</version>
+        <executions>
+          <execution>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <tasks>
+                <mkdir dir="${basedir}/src/main/python/${python_package}"/>
+              </tasks>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
         <version>1.1</version>
@@ -169,7 +187,6 @@ python installed, if they don't need python bindings.
               </includes>
               <excludes>
                 <exclude>requirements.txt</exclude>
-                <exclude>${python_package}/__init__.py</exclude>
               </excludes>
               <followSymlinks>false</followSymlinks>
             </fileset>
@@ -186,8 +203,6 @@ python installed, if they don't need python bindings.
     </plugins>
     <resources>
       <resource>
-        <!-- Copy _version.py to python package directory, so the package
-        version stays in sync with the protocol buffer definition.-->
         <directory>src/main/resources</directory>
         <includes>
           <include>setup.py</include>
@@ -197,11 +212,9 @@ python installed, if they don't need python bindings.
         <filtering>true</filtering>
       </resource>
       <resource>
-        <!-- Copy _version.py to python package directory, so the package
-        version stays in sync with the protocol buffer definition.-->
         <directory>src/main/resources</directory>
         <includes>
-          <include>_version.py</include>
+          <include>__init__.py</include>
         </includes>
         <targetPath>${basedir}/src/main/python/${python_package}</targetPath>
         <filtering>true</filtering>
@@ -217,17 +230,11 @@ python installed, if they don't need python bindings.
   </build>
 
   <dependencies>
-
     <!-- general system dependencies -->
-    <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-      <version>1.2.16</version>
-    </dependency>
     <dependency>
       <groupId>com.google.protobuf</groupId>
       <artifactId>protobuf-java</artifactId>
-      <version>2.4.1</version>
+      <version>2.5.0</version>
     </dependency>
   </dependencies>
 </project>

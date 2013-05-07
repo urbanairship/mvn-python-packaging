@@ -2,12 +2,10 @@ from setuptools import setup, find_packages
 
 requirements = [l.strip() for l in open('requirements.txt').readlines()]
 
-execfile('${python_package}/_version.py')
-
 setup(
     name='${python_package}',
     url='${source_url}',
-    version=version,
+    version='${python_version}',
     author='${author}',
     author_email='${author_email}',
     description='${description}',
