@@ -1,0 +1,209 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.urbanairship</groupId>
+  <artifactId>sample-pb</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.build.timestamp.format>MM.dd.HHmm</maven.build.timestamp.format>
+    <python_package>sample_pb</python_package>
+    <description>Sample protocol buffer bindings for python</description>
+    <author>Justin Bailey</author>
+    <author_email>justin.bailey@urbanairship.com</author_email>
+    <source_url>https://github.com/urbanairship/maven_python</source_url>
+    <!-- Use a non-existent phase to make sure python tasks only
+    run when one of the profiles below is activated. -->
+    <python_compile_phase>never</python_compile_phase>
+  </properties>
+
+  <!-- Activating any of these profiles will cause the python PB bindings package
+  to be built. The profiles can be activated in any of 3 ways:
+
+    * -DPYTHON_BINDINGS on the command line (e.g., "mvn install -DPYTHON_BINDINGS")
+    * Defining the PYTHON_BINDINGS environment variable.
+
+Otherwise, no package will be built and developers don't not need to worry about having
+python installed, if they don't need python bindings.
+    -->
+  <profiles>
+    <profile>
+      <id>python-builder</id>
+      <activation>
+        <property>
+          <name>PYTHON_BINDINGS</name>
+        </property>
+      </activation>
+      <properties>
+        <python_compile_phase>compile</python_compile_phase>
+      </properties>
+    </profile>
+    <profile>
+      <id>python-builder-en</id>
+      <activation>
+        <property>
+          <name>env.PYTHON_BINDINGS</name>
+        </property>
+      </activation>
+      <properties>
+        <python_compile_phase>compile</python_compile_phase>
+      </properties>
+    </profile>
+    <profile>
+      <id>jenkins-builder</id>
+      <activation>
+        <property>
+          <name>env.JENKINS_URL</name>
+        </property>
+      </activation>
+      <properties>
+        <python_compile_phase>compile</python_compile_phase>
+      </properties>
+    </profile>
+  </profiles>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>2.3.2</version>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <!--
+  SNAPSHOT is considered a 'pre-release' tag (in setuptools terminology),
+  so we replace it with 'preview'.
+
+  http://peak.telecommunity.com/DevCenter/setuptools#specifying-your-project-s-version
+  -->
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>1.8</version>
+        <executions>
+          <execution>
+	    <id>write-python-version</id>
+            <goals><goal>regex-property</goal></goals>
+            <phase>generate-resources</phase>
+            <configuration>
+              <name>python_version</name>
+              <regex>-SNAPSHOT</regex>
+              <value>${project.version}</value>
+              <replacement>\.preview</replacement>
+              <failIfNoMatch>false</failIfNoMatch>
+            </configuration>
+          </execution>
+          <execution>
+	    <id>add-generated-sources</id>
+            <goals><goal>add-source</goal></goals>
+            <phase>compile</phase>
+            <configuration>
+              <sources>
+                <source>${project.build.directory}/generated-sources/java</source>
+              </sources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <!-- Make sure destination directories for protoc output
+        exist. -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.7</version>
+        <executions>
+          <execution>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <tasks>
+                <mkdir dir="${project.build.directory}/generated-sources/python/${python_package}"/>
+                <mkdir dir="${project.build.directory}/generated-sources/java"/>
+              </tasks>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>1.1</version>
+        <executions>
+          <execution>
+            <id>generate-bindings</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>protoc</executable>
+              <workingDirectory>${basedir}</workingDirectory>
+              <arguments>
+                <argument>--proto_path=${basedir}/src/main/resources</argument>
+                <argument>--java_out=${project.build.directory}/generated-sources/java</argument>
+                <argument>--python_out=${project.build.directory}/generated-sources/python/${python_package}</argument>
+                <argument>${basedir}/src/main/resources/*.proto</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>generate-package</id>
+            <phase>${python_compile_phase}</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>python</executable>
+              <workingDirectory>${project.build.directory}/generated-sources/python</workingDirectory>
+              <arguments>
+                <argument>setup.py</argument>
+                <argument>sdist</argument>
+              </arguments>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <includes>
+          <include>setup.py</include>
+          <include>MANIFEST.in</include>
+          <include>requirements.txt</include>
+        </includes>
+        <targetPath>${project.build.directory}/generated-sources/python</targetPath>
+        <filtering>true</filtering>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <includes>
+          <include>__init__.py</include>
+        </includes>
+        <targetPath>${project.build.directory}/generated-sources/python/${python_package}</targetPath>
+        <filtering>true</filtering>
+      </resource>
+      <resource>
+        <!-- Ship a copy of PB definition with the python package.-->
+        <directory>src/main/resources</directory>
+        <includes><include>*.proto</include></includes>
+        <targetPath>${project.build.directory}/generated-sources/python/${python_package}</targetPath>
+        <filtering>false</filtering>
+      </resource>
+    </resources>
+  </build>
+
+  <dependencies>
+    <!-- general system dependencies -->
+    <dependency>
+      <groupId>com.google.protobuf</groupId>
+      <artifactId>protobuf-java</artifactId>
+      <version>2.5.0</version>
+    </dependency>
+  </dependencies>
+</project>

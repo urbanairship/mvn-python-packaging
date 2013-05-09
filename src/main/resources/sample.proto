@@ -1,0 +1,5 @@
+package com.urbanairship.sample;
+
+message M {
+  optional int32 a = 1;
+}
