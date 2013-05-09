@@ -3,9 +3,13 @@
 As a new engineer at Urban Airship, one of my first tasks was to
 improve our build process for generated Python code. Specifically, a
 number of internal projects use [Maven](http://maven.apache.org) to
-generate Java and Python bindings from specifications written in
+generate Java and Python bindings from specifications written using
 Google's [Protocol
-Buffers](https://developers.google.com/protocol-buffers/) language.
+Buffers](https://developers.google.com/protocol-buffers/), a
+language-neutral, platform-neutral, extensible mechanism for
+serializing structured data. Urban Airship uses Protocol Buffers
+extensively under the hood for communication between software services
+in our service oriented architecture.
 
 Initially, our existing Maven projects executed Google's `protoc`
 compiler and placed the generated code in a sub-directory of the
@@ -30,7 +34,7 @@ PYTHON_BINDINGS argument:
     mvn clean install -DPYTHON_BINDINGS
 
 After Maven runs, you will find a Python package named
-`sample-0.0.1.preview.tar.gz` in
+`sample_pb-0.0.1.preview.tar.gz` in
 `target/generated-sources/python/sample_pb/dist`. You will also find
 the source for the package in `target/generated-sources/python`.
 
