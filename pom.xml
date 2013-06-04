@@ -195,6 +195,13 @@ python installed, if they don't need python bindings.
         <targetPath>${project.build.directory}/generated-sources/python/${python_package}</targetPath>
         <filtering>false</filtering>
       </resource>
+      <resource>
+        <!-- Ship a copy of PB definition with the java jar.  This would be done by default but the override above prevents it so we have to be explicit -->
+        <directory>src/main/resources</directory>
+        <includes><include>*.proto</include></includes>
+        <targetPath>${project.build.directory}/classes</targetPath>
+        <filtering>false</filtering>
+      </resource>
     </resources>
   </build>
 
